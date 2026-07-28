@@ -4,6 +4,7 @@ struct PostConvoFlowView: View {
     var onSaved: (SavedSound) -> Void
 
     @State private var viewModel: SoundCreationViewModel
+    @State private var hasSaved = false
 
     init(
         mode: CuratorMode,
@@ -50,20 +51,22 @@ struct PostConvoFlowView: View {
             } else if viewModel.isShowingSaving {
                 SavingView(
                     candidate: viewModel.selectedCandidate,
-                    isSaving: viewModel.isSavingToCloud,
+                    isSaving: viewModel.isSavingToCloud || hasSaved,
                     onBack: {
                         withAnimation(.easeInOut(duration: 0.4)) {
                             viewModel.backToCandidates()
                         }
                     },
                     onSave: { name in
+                        guard !hasSaved else { return }
+                        hasSaved = true
                         viewModel.stopAudio()
                         Task {
                             do {
                                 let sound = try await viewModel.saveToCloud(name: name)
                                 onSaved(sound)
                             } catch {
-                                // Surface the error back to retry view
+                                hasSaved = false
                                 withAnimation(.easeInOut(duration: 0.4)) {
                                     viewModel.requestRetry()
                                 }

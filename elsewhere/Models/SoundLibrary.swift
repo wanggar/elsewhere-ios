@@ -15,7 +15,7 @@ struct SoundLibrary: Equatable {
     }
 
     var pendingModes: [CuratorMode] {
-        CuratorMode.allCases.filter { $0 != activeMode }
+        CuratorMode.allCases.filter { sounds(for: $0).isEmpty }
     }
 
     func sounds(for mode: CuratorMode) -> [SavedSound] {

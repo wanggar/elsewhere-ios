@@ -5,7 +5,8 @@ import Foundation
 final class CandidateAudioPlayer {
     static let shared = CandidateAudioPlayer()
 
-    private var player: AVAudioPlayer?
+    private var player: AVQueuePlayer?
+    private var looper: AVPlayerLooper?
 
     private init() {}
 
@@ -16,17 +17,20 @@ final class CandidateAudioPlayer {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
-            player = try AVAudioPlayer(contentsOf: url)
-            player?.numberOfLoops = -1
-            player?.prepareToPlay()
-            player?.play()
         } catch {
-            player = nil
+            return
         }
+
+        let item = AVPlayerItem(url: url)
+        let queuePlayer = AVQueuePlayer(items: [item])
+        looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
+        player = queuePlayer
+        player?.play()
     }
 
     func stop() {
-        player?.stop()
+        player?.pause()
+        looper = nil
         player = nil
         try? AVAudioSession.sharedInstance().setActive(
             false,

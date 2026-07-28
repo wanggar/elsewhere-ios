@@ -92,7 +92,7 @@ struct LibraryView: View {
                 }
             }
 
-            cardActions(for: viewModel.library.activeMode, sounds: sounds)
+            cardActions(for: viewModel.library.activeMode)
         }
     }
 
@@ -103,44 +103,53 @@ struct LibraryView: View {
                     ForEach(Array(group.sounds.enumerated()), id: \.element.id) { index, sound in
                         soundCard(sound: sound, isNowPlaying: index == group.sounds.count - 1)
                     }
+                    cardActions(for: group.mode)
                 }
             }
         }
     }
 
     private func soundCard(sound: SavedSound, isNowPlaying: Bool) -> some View {
-        Button {
-            selectedSound = sound
-        } label: {
-            VStack(spacing: 0) {
-                SoundWaveIllustration(color: sound.mode.cardPrimaryColor)
-                    .padding(.top, 4)
+        VStack(spacing: 0) {
+            SoundWaveIllustration(color: sound.mode.cardPrimaryColor)
+                .padding(.top, 4)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(isNowPlaying ? "\(sound.categoryLabel) · NOW PLAYING" : sound.categoryLabel)
-                        .font(AppTheme.labelCaps(11))
-                        .tracking(1.2)
-                        .foregroundStyle(sound.mode.cardPrimaryColor)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(isNowPlaying ? "\(sound.categoryLabel) · NOW PLAYING" : sound.categoryLabel)
+                    .font(AppTheme.labelCaps(11))
+                    .tracking(1.2)
+                    .foregroundStyle(sound.mode.cardPrimaryColor)
 
-                    Text(sound.title)
-                        .font(AppTheme.serifTitle(30))
-                        .foregroundStyle(sound.mode.cardPrimaryColor)
+                Text(sound.title)
+                    .font(AppTheme.serifTitle(30))
+                    .foregroundStyle(sound.mode.cardPrimaryColor)
 
-                    Text(sound.subtitle)
-                        .font(AppTheme.serifItalic(17))
-                        .foregroundStyle(sound.mode.cardSecondaryColor)
+                Text(sound.subtitle)
+                    .font(AppTheme.serifItalic(17))
+                    .foregroundStyle(sound.mode.cardSecondaryColor)
 
-                    progressBar(for: sound.mode)
-                        .padding(.top, 8)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 20)
+                progressBar(for: sound.mode)
+                    .padding(.top, 8)
             }
-            .background(sound.mode.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 20)
         }
-        .buttonStyle(.plain)
+        .background(sound.mode.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .onTapGesture { selectedSound = sound }
+        .overlay(alignment: .topTrailing) {
+            Button {
+                viewModel.delete(sound)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(sound.mode.cardPrimaryColor.opacity(0.45))
+                    .padding(18)
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     private func placeholderCard(for mode: CuratorMode) -> some View {
@@ -173,30 +182,17 @@ struct LibraryView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
-    private func cardActions(for mode: CuratorMode, sounds: [SavedSound]) -> some View {
-        HStack(spacing: 20) {
-            Button {
-                CandidateAudioPlayer.shared.stop()
-                activeConvoSession = ConvoSession(mode: mode)
-            } label: {
-                Text("add card")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
-            .buttonStyle(.plain)
-
-            Button {
-                viewModel.deleteLast(in: mode)
-            } label: {
-                Text("delete")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
-            .buttonStyle(.plain)
-            .disabled(sounds.isEmpty)
-
-            Spacer()
+    private func cardActions(for mode: CuratorMode) -> some View {
+        Button {
+            CandidateAudioPlayer.shared.stop()
+            activeConvoSession = ConvoSession(mode: mode)
+        } label: {
+            Text("add card")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(AppTheme.textSecondary)
         }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func progressBar(for mode: CuratorMode) -> some View {
@@ -221,18 +217,22 @@ struct LibraryView: View {
         }
     }
 
+    @ViewBuilder
     private var modesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("WHEN YOU'RE READY")
-                .font(AppTheme.labelCaps(11))
-                .tracking(1.2)
-                .foregroundStyle(AppTheme.textMuted)
+        let pending = viewModel.library.pendingModes
+        if !pending.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("WHEN YOU'RE READY")
+                    .font(AppTheme.labelCaps(11))
+                    .tracking(1.2)
+                    .foregroundStyle(AppTheme.textMuted)
 
-            VStack(spacing: 8) {
-                ForEach(viewModel.library.pendingModes) { mode in
-                    LibraryModeCard(mode: mode) {
-                        CandidateAudioPlayer.shared.stop()
-                        activeConvoSession = ConvoSession(mode: mode)
+                VStack(spacing: 8) {
+                    ForEach(pending) { mode in
+                        LibraryModeCard(mode: mode) {
+                            CandidateAudioPlayer.shared.stop()
+                            activeConvoSession = ConvoSession(mode: mode)
+                        }
                     }
                 }
             }
