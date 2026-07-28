@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SavingView: View {
     let candidate: SoundCandidate
+    var isSaving: Bool = false
     var onBack: () -> Void
     var onSave: (String) -> Void
 
@@ -14,8 +15,9 @@ struct SavingView: View {
         "the heater settling",
     ]
 
-    init(candidate: SoundCandidate, onBack: @escaping () -> Void, onSave: @escaping (String) -> Void = { _ in }) {
+    init(candidate: SoundCandidate, isSaving: Bool = false, onBack: @escaping () -> Void, onSave: @escaping (String) -> Void = { _ in }) {
         self.candidate = candidate
+        self.isSaving = isSaving
         self.onBack = onBack
         self.onSave = onSave
         _soundName = State(initialValue: candidate.title)
@@ -151,15 +153,23 @@ struct SavingView: View {
         Button {
             onSave(soundName)
         } label: {
-            Text("save to your space")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Color.black.opacity(0.85))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 18)
-                .background(AppTheme.creamButton)
-                .clipShape(Capsule())
+            Group {
+                if isSaving {
+                    ProgressView()
+                        .tint(Color.black.opacity(0.6))
+                } else {
+                    Text("save to your space")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Color.black.opacity(0.85))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+            .background(AppTheme.creamButton)
+            .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .disabled(isSaving || soundName.trimmingCharacters(in: .whitespaces).isEmpty)
     }
 }
 

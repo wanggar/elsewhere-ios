@@ -50,6 +50,7 @@ struct PostConvoFlowView: View {
             } else if viewModel.isShowingSaving {
                 SavingView(
                     candidate: viewModel.selectedCandidate,
+                    isSaving: viewModel.isSavingToCloud,
                     onBack: {
                         withAnimation(.easeInOut(duration: 0.4)) {
                             viewModel.backToCandidates()
@@ -57,20 +58,17 @@ struct PostConvoFlowView: View {
                     },
                     onSave: { name in
                         viewModel.stopAudio()
-                        let id = UUID()
-                        let audioFileName: String?
-                        if let sourceURL = viewModel.selectedCandidate.audioURL {
-                            audioFileName = try? SoundFileStore.persist(from: sourceURL, id: id)
-                        } else {
-                            audioFileName = nil
+                        Task {
+                            do {
+                                let sound = try await viewModel.saveToCloud(name: name)
+                                onSaved(sound)
+                            } catch {
+                                // Surface the error back to retry view
+                                withAnimation(.easeInOut(duration: 0.4)) {
+                                    viewModel.requestRetry()
+                                }
+                            }
                         }
-                        onSaved(SavedSound(
-                            id: id,
-                            title: name,
-                            subtitle: viewModel.selectedCandidate.subtitle,
-                            mode: viewModel.mode,
-                            audioFileName: audioFileName
-                        ))
                     }
                 )
                 .transition(.opacity)

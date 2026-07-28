@@ -101,33 +101,19 @@ struct APISoundGenerationService: SoundGenerationService {
         let mimeType: String?
     }
 
-    private struct ErrorBody: Decodable {
-        let error: String
-    }
-
     func generate(
         mode: CuratorMode,
         messages: [TranscriptMessage]
     ) async throws -> SoundGenerationResult {
-        var request = URLRequest(url: APIConfig.soundCandidatesURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 120
-        request.httpBody = try JSONEncoder().encode(
+        let body = try JSONEncoder().encode(
             RequestBody(mode: mode.rawValue, messages: messages)
         )
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw SoundGenerationError.invalidResponse
-        }
-
-        guard (200...299).contains(http.statusCode) else {
-            if let errorBody = try? JSONDecoder().decode(ErrorBody.self, from: data) {
-                throw SoundGenerationError.server(errorBody.error)
-            }
-            throw SoundGenerationError.server("Request failed (\(http.statusCode))")
-        }
+        let data = try await APIClient.request(
+            url: APIConfig.soundCandidatesURL,
+            method: "POST",
+            body: body
+        )
 
         let decoded: ResponseBody
         do {
@@ -145,7 +131,10 @@ struct APISoundGenerationService: SoundGenerationService {
                 id: UUID(uuidString: dto.id) ?? UUID(),
                 title: dto.title,
                 subtitle: dto.subtitle,
-                audioURL: url
+                audioURL: url,
+                // Keep the base64 so we can upload the chosen candidate to the API
+                audioBase64: dto.audioBase64,
+                generationPrompt: dto.prompt
             )
         }
 

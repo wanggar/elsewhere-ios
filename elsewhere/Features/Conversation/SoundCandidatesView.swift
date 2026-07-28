@@ -5,17 +5,25 @@ struct SoundCandidate: Identifiable, Equatable, Sendable {
     let title: String
     let subtitle: String
     let audioURL: URL?
+    /// Raw base64-encoded MP3 data from the generation API — used when uploading the chosen candidate.
+    let audioBase64: String?
+    /// The ElevenLabs prompt that produced this sound — stored alongside the saved record.
+    let generationPrompt: String?
 
     init(
         id: UUID = UUID(),
         title: String,
         subtitle: String,
-        audioURL: URL? = nil
+        audioURL: URL? = nil,
+        audioBase64: String? = nil,
+        generationPrompt: String? = nil
     ) {
         self.id = id
         self.title = title
         self.subtitle = subtitle
         self.audioURL = audioURL
+        self.audioBase64 = audioBase64
+        self.generationPrompt = generationPrompt
     }
 }
 

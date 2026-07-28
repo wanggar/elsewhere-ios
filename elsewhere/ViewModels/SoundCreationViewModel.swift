@@ -22,6 +22,7 @@ final class SoundCreationViewModel {
     private(set) var headerTitle: String = "THREE WAYS"
     private(set) var generationError: String?
     private(set) var hasGeneratedSuccessfully = false
+    private(set) var isSavingToCloud = false
 
     private var skipIntroAfterGeneration = false
     private let service: SoundGenerationService
@@ -125,5 +126,62 @@ final class SoundCreationViewModel {
 
     func stopAudio() {
         CandidateAudioPlayer.shared.stop()
+    }
+
+    // MARK: - Cloud save
+
+    /// Uploads the selected candidate to the backend and returns a fully-formed `SavedSound`.
+    func saveToCloud(name: String) async throws -> SavedSound {
+        guard let base64 = selectedCandidate.audioBase64, !base64.isEmpty else {
+            throw SoundGenerationError.server("Audio data is unavailable — please try again.")
+        }
+
+        isSavingToCloud = true
+        defer { isSavingToCloud = false }
+
+        struct SaveRequest: Encodable {
+            let mode: String
+            let title: String
+            let subtitle: String
+            let audioBase64: String
+            let generationPrompt: String?
+        }
+
+        struct SaveResponse: Decodable {
+            struct SoundDTO: Decodable {
+                let id: String
+                let mode: String
+                let title: String
+                let subtitle: String
+                let audioUrl: String
+                let createdAt: String
+            }
+            let sound: SoundDTO
+        }
+
+        let body = try JSONEncoder().encode(SaveRequest(
+            mode: mode.rawValue,
+            title: name,
+            subtitle: selectedCandidate.subtitle,
+            audioBase64: base64,
+            generationPrompt: selectedCandidate.generationPrompt
+        ))
+
+        let data = try await APIClient.request(
+            url: APIConfig.libraryURL,
+            method: "POST",
+            body: body
+        )
+
+        let response = try JSONDecoder().decode(SaveResponse.self, from: data)
+        let dto = response.sound
+
+        return SavedSound(
+            id: UUID(uuidString: dto.id) ?? UUID(),
+            title: dto.title,
+            subtitle: dto.subtitle,
+            mode: CuratorMode(rawValue: dto.mode) ?? mode,
+            audioURL: URL(string: dto.audioUrl)
+        )
     }
 }

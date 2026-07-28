@@ -1,5 +1,7 @@
 import Foundation
 
+/// Local file cache for generated audio. Audio is now authoritative in Supabase Storage;
+/// this store is only used for temporary preview files during the generation flow.
 enum SoundFileStore {
     static var soundsDirectory: URL {
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -8,26 +10,13 @@ enum SoundFileStore {
         return directory
     }
 
-    static func persist(from sourceURL: URL, id: UUID) throws -> String {
-        let fileName = "\(id.uuidString).mp3"
-        let destination = soundsDirectory.appendingPathComponent(fileName)
-
-        if FileManager.default.fileExists(atPath: destination.path) {
-            try FileManager.default.removeItem(at: destination)
+    /// Cleans up all locally cached MP3 files. Call on sign-out if desired.
+    static func clearAll() {
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: soundsDirectory, includingPropertiesForKeys: nil
+        ) else { return }
+        for url in contents {
+            try? FileManager.default.removeItem(at: url)
         }
-
-        try FileManager.default.copyItem(at: sourceURL, to: destination)
-        return fileName
-    }
-
-    static func url(for fileName: String?) -> URL? {
-        guard let fileName, !fileName.isEmpty else { return nil }
-        let url = soundsDirectory.appendingPathComponent(fileName)
-        return FileManager.default.fileExists(atPath: url.path) ? url : nil
-    }
-
-    static func delete(fileName: String?) {
-        guard let url = url(for: fileName) else { return }
-        try? FileManager.default.removeItem(at: url)
     }
 }

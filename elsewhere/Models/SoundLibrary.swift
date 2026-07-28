@@ -48,7 +48,6 @@ struct SoundLibrary: Equatable {
     }
 
     mutating func delete(_ sound: SavedSound) {
-        SoundFileStore.delete(fileName: sound.audioFileName)
         sounds.removeAll { $0.id == sound.id }
 
         if !sounds(for: activeMode).isEmpty {

@@ -3,6 +3,7 @@ import SwiftUI
 struct LibraryView: View {
     var viewModel: LibraryViewModel
 
+    @Environment(AuthViewModel.self) private var authViewModel
     @State private var selectedSound: SavedSound?
     @State private var activeConvoSession: ConvoSession?
 
@@ -53,9 +54,11 @@ struct LibraryView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top) {
+        let firstName = authViewModel.displayName.components(separatedBy: " ").first ?? authViewModel.displayName
+        let initial = String(firstName.prefix(1)).uppercased()
+        return HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Lin's space")
+                Text("\(firstName)'s space")
                     .font(AppTheme.serifTitle(34))
                     .foregroundStyle(AppTheme.textPrimary)
 
@@ -70,7 +73,7 @@ struct LibraryView: View {
                 .fill(AppTheme.profileBackground)
                 .frame(width: 36, height: 36)
                 .overlay {
-                    Text("L")
+                    Text(initial)
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(AppTheme.textPrimary)
                 }
