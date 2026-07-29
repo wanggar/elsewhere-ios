@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct SavingView: View {
+    let mode: CuratorMode
     let candidate: SoundCandidate
     var isSaving: Bool = false
+    var saveError: String? = nil
     var onBack: () -> Void
     var onSave: (String) -> Void
 
@@ -15,9 +17,18 @@ struct SavingView: View {
         "the heater settling",
     ]
 
-    init(candidate: SoundCandidate, isSaving: Bool = false, onBack: @escaping () -> Void, onSave: @escaping (String) -> Void = { _ in }) {
+    init(
+        mode: CuratorMode,
+        candidate: SoundCandidate,
+        isSaving: Bool = false,
+        saveError: String? = nil,
+        onBack: @escaping () -> Void,
+        onSave: @escaping (String) -> Void = { _ in }
+    ) {
+        self.mode = mode
         self.candidate = candidate
         self.isSaving = isSaving
+        self.saveError = saveError
         self.onBack = onBack
         self.onSave = onSave
         _soundName = State(initialValue: candidate.title)
@@ -47,9 +58,19 @@ struct SavingView: View {
                     .padding(.horizontal, 24)
                 }
 
-                saveButton
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
+                VStack(spacing: 12) {
+                    if let saveError {
+                        Text(saveError)
+                            .font(.system(size: 14))
+                            .foregroundStyle(AppTheme.accentPurple)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 8)
+                    }
+
+                    saveButton
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
             }
         }
         .preferredColorScheme(.dark)
@@ -74,23 +95,23 @@ struct SavingView: View {
             CompactSoundIcon()
                 .padding(.top, 8)
 
-            Text("SLEEP")
+            Text(mode.categoryLabel)
                 .font(AppTheme.labelCaps(10))
                 .tracking(1.2)
-                .foregroundStyle(AppTheme.accentPurple)
+                .foregroundStyle(mode.cardPrimaryColor)
 
             Text("the sound you chose")
                 .font(AppTheme.serifTitle(22))
-                .foregroundStyle(AppTheme.accentPurple)
+                .foregroundStyle(mode.cardPrimaryColor)
 
             Text(candidate.subtitle)
                 .font(AppTheme.serifItalic(16))
-                .foregroundStyle(AppTheme.accentPurple.opacity(0.85))
+                .foregroundStyle(mode.cardPrimaryColor.opacity(0.85))
                 .padding(.bottom, 8)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
-        .background(AppTheme.nowPlayingBackground)
+        .background(mode.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
@@ -175,6 +196,7 @@ struct SavingView: View {
 
 #Preview {
     SavingView(
+        mode: .sleep,
         candidate: SoundCandidate(title: "the living room", subtitle: "heater settling, the page turning"),
         onBack: {}
     )

@@ -13,7 +13,7 @@ enum PostConvoStep: Equatable {
 @Observable
 final class SoundCreationViewModel {
     let mode: CuratorMode
-    let messages: [TranscriptMessage]
+    private var transcriptMessages: [TranscriptMessage]
 
     private(set) var step: PostConvoStep = .generating
     private(set) var selectedCandidate: SoundCandidate
@@ -21,6 +21,7 @@ final class SoundCreationViewModel {
     private(set) var checklist: GenerationChecklist = .placeholder
     private(set) var headerTitle: String = "THREE WAYS"
     private(set) var generationError: String?
+    private(set) var saveError: String?
     private(set) var hasGeneratedSuccessfully = false
     private(set) var isSavingToCloud = false
 
@@ -34,7 +35,7 @@ final class SoundCreationViewModel {
         service: SoundGenerationService = APISoundGenerationService()
     ) {
         self.mode = mode
-        self.messages = messages.isEmpty ? TranscriptMessage.fallback(for: mode) : messages
+        self.transcriptMessages = messages.isEmpty ? TranscriptMessage.fallback(for: mode) : messages
         self.service = service
         self.selectedCandidate = SoundCandidate(
             title: "composing…",
@@ -63,7 +64,7 @@ final class SoundCreationViewModel {
 
     private func runGeneration() async {
         do {
-            let result = try await service.generate(mode: mode, messages: messages)
+            let result = try await service.generate(mode: mode, messages: transcriptMessages)
             guard !Task.isCancelled else { return }
 
             checklist = result.checklist
@@ -119,9 +120,22 @@ final class SoundCreationViewModel {
         }
     }
 
-    func retryGeneration() {
+    func retryGeneration(feedback: String? = nil) {
+        if let feedback, !feedback.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            transcriptMessages.append(
+                TranscriptMessage(role: "user", content: feedback.trimmingCharacters(in: .whitespacesAndNewlines))
+            )
+        }
         skipIntroAfterGeneration = hasGeneratedSuccessfully
         startGeneration()
+    }
+
+    func clearSaveError() {
+        saveError = nil
+    }
+
+    func reportSaveError(_ message: String) {
+        saveError = message
     }
 
     func stopAudio() {
@@ -136,6 +150,7 @@ final class SoundCreationViewModel {
             throw SoundGenerationError.server("Audio data is unavailable — please try again.")
         }
 
+        saveError = nil
         isSavingToCloud = true
         defer { isSavingToCloud = false }
 

@@ -43,18 +43,18 @@ final class LibraryViewModel {
         library.add(sound)
     }
 
-    /// Soft-deletes on the server, then removes locally.
+    /// Soft-deletes on the server, then removes locally on success.
     func delete(_ sound: SavedSound) {
         Task {
             do {
                 let url = APIConfig.libraryItemURL(id: sound.id.uuidString)
                 _ = try await APIClient.request(url: url, method: "DELETE")
+                library.delete(sound)
             } catch {
-                // Best-effort; don't surface delete errors for now
+                fetchError = "Couldn't delete — try again."
                 print("[LibraryViewModel] delete error:", error.localizedDescription)
             }
         }
-        library.delete(sound)
     }
 
     func deleteLast(in mode: CuratorMode) {

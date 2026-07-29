@@ -33,6 +33,6 @@ struct SavedSound: Identifiable, Equatable, Hashable {
     }
 
     var immersiveDescription: String {
-        "\(subtitle), snow muffling the street"
+        subtitle
     }
 }

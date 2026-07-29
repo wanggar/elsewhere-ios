@@ -1,11 +1,12 @@
 import SwiftUI
 
 struct LibraryView: View {
-    var viewModel: LibraryViewModel
+    @Bindable var viewModel: LibraryViewModel
 
     @Environment(AuthViewModel.self) private var authViewModel
     @State private var selectedSound: SavedSound?
     @State private var activeConvoSession: ConvoSession?
+    @State private var showSignOutConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -51,6 +52,9 @@ struct LibraryView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .task {
+            await viewModel.fetchLibrary()
+        }
     }
 
     private var header: some View {
@@ -69,14 +73,21 @@ struct LibraryView: View {
 
             Spacer()
 
-            Circle()
-                .fill(AppTheme.profileBackground)
-                .frame(width: 36, height: 36)
-                .overlay {
-                    Text(initial)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(AppTheme.textPrimary)
-                }
+            Button { showSignOutConfirmation = true } label: {
+                Circle()
+                    .fill(AppTheme.profileBackground)
+                    .frame(width: 36, height: 36)
+                    .overlay {
+                        Text(initial)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(AppTheme.textPrimary)
+                    }
+            }
+            .buttonStyle(.plain)
+            .confirmationDialog("", isPresented: $showSignOutConfirmation) {
+                Button("Sign Out", role: .destructive) { authViewModel.signOut() }
+                Button("Cancel", role: .cancel) {}
+            }
         }
     }
 
@@ -87,8 +98,8 @@ struct LibraryView: View {
             if sounds.isEmpty {
                 placeholderCard(for: viewModel.library.activeMode)
             } else {
-                ForEach(Array(sounds.enumerated()), id: \.element.id) { index, sound in
-                    soundCard(sound: sound, isNowPlaying: index == sounds.count - 1)
+                ForEach(Array(sounds.enumerated()), id: \.element.id) { _, sound in
+                    soundCard(sound: sound)
                 }
             }
 
@@ -100,8 +111,8 @@ struct LibraryView: View {
         VStack(alignment: .leading, spacing: 20) {
             ForEach(viewModel.library.otherSavedModeGroups, id: \.mode) { group in
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(group.sounds.enumerated()), id: \.element.id) { index, sound in
-                        soundCard(sound: sound, isNowPlaying: index == group.sounds.count - 1)
+                    ForEach(Array(group.sounds.enumerated()), id: \.element.id) { _, sound in
+                        soundCard(sound: sound)
                     }
                     cardActions(for: group.mode)
                 }
@@ -109,13 +120,37 @@ struct LibraryView: View {
         }
     }
 
-    private func soundCard(sound: SavedSound, isNowPlaying: Bool) -> some View {
+    private func soundCard(sound: SavedSound) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Button {
+                selectedSound = sound
+            } label: {
+                soundCardBody(sound: sound)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                viewModel.delete(sound)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(sound.mode.cardPrimaryColor.opacity(0.45))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .padding(.top, 6)
+            .padding(.trailing, 6)
+        }
+    }
+
+    private func soundCardBody(sound: SavedSound) -> some View {
         VStack(spacing: 0) {
             SoundWaveIllustration(color: sound.mode.cardPrimaryColor)
                 .padding(.top, 4)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text(isNowPlaying ? "\(sound.categoryLabel) · NOW PLAYING" : sound.categoryLabel)
+                Text(sound.categoryLabel)
                     .font(AppTheme.labelCaps(11))
                     .tracking(1.2)
                     .foregroundStyle(sound.mode.cardPrimaryColor)
@@ -137,19 +172,6 @@ struct LibraryView: View {
         }
         .background(sound.mode.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .onTapGesture { selectedSound = sound }
-        .overlay(alignment: .topTrailing) {
-            Button {
-                viewModel.delete(sound)
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(sound.mode.cardPrimaryColor.opacity(0.45))
-                    .padding(18)
-            }
-            .buttonStyle(.plain)
-        }
     }
 
     private func placeholderCard(for mode: CuratorMode) -> some View {
@@ -158,7 +180,7 @@ struct LibraryView: View {
                 .padding(.top, 4)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(mode.categoryLabel) · NOW PLAYING")
+                Text("\(mode.categoryLabel) · READY")
                     .font(AppTheme.labelCaps(11))
                     .tracking(1.2)
                     .foregroundStyle(mode.cardPrimaryColor)

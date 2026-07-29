@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RetryView: View {
     var onBack: () -> Void
-    var onAnotherTry: () -> Void
+    var onAnotherTry: (String) -> Void
 
     @State private var feedbackText = ""
 
@@ -35,7 +35,7 @@ struct RetryView: View {
                             .foregroundStyle(AppTheme.retryAccent)
                             .padding(.bottom, 16)
 
-                        Text("What did your winter have that mine didn't?")
+                        Text("What felt off about these three?")
                             .font(AppTheme.serifTitle(30))
                             .foregroundStyle(AppTheme.retryTextPrimary)
                             .multilineTextAlignment(.center)
@@ -119,16 +119,11 @@ struct RetryView: View {
 
     private var bottomBar: some View {
         HStack {
-            Button(action: {}) {
-                Image(systemName: "mic")
-                    .font(.system(size: 22))
-                    .foregroundStyle(AppTheme.retryTextSecondary)
-            }
-            .buttonStyle(.plain)
-
             Spacer()
 
-            Button(action: onAnotherTry) {
+            Button {
+                onAnotherTry(feedbackText)
+            } label: {
                 Text("another try")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(AppTheme.retryBackground)
@@ -143,5 +138,5 @@ struct RetryView: View {
 }
 
 #Preview {
-    RetryView(onBack: {}, onAnotherTry: {})
+    RetryView(onBack: {}, onAnotherTry: { _ in })
 }

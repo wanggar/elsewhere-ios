@@ -23,7 +23,10 @@ struct PostConvoFlowView: View {
                 SoundGenerationView(checklist: viewModel.checklist)
                     .transition(.opacity)
             } else if viewModel.isShowingIntro {
-                PostConvoIntroView {
+                PostConvoIntroView(
+                    headerTitle: viewModel.headerTitle,
+                    mode: viewModel.mode
+                ) {
                     withAnimation(.easeInOut(duration: 0.4)) {
                         viewModel.beginListening()
                     }
@@ -37,6 +40,7 @@ struct PostConvoFlowView: View {
                         viewModel.preview(candidate)
                     },
                     onSave: { candidate in
+                        viewModel.clearSaveError()
                         withAnimation(.easeInOut(duration: 0.4)) {
                             viewModel.select(candidate)
                         }
@@ -50,9 +54,12 @@ struct PostConvoFlowView: View {
                 .transition(.opacity)
             } else if viewModel.isShowingSaving {
                 SavingView(
+                    mode: viewModel.mode,
                     candidate: viewModel.selectedCandidate,
                     isSaving: viewModel.isSavingToCloud || hasSaved,
+                    saveError: viewModel.saveError,
                     onBack: {
+                        viewModel.clearSaveError()
                         withAnimation(.easeInOut(duration: 0.4)) {
                             viewModel.backToCandidates()
                         }
@@ -60,6 +67,7 @@ struct PostConvoFlowView: View {
                     onSave: { name in
                         guard !hasSaved else { return }
                         hasSaved = true
+                        viewModel.clearSaveError()
                         viewModel.stopAudio()
                         Task {
                             do {
@@ -67,9 +75,7 @@ struct PostConvoFlowView: View {
                                 onSaved(sound)
                             } catch {
                                 hasSaved = false
-                                withAnimation(.easeInOut(duration: 0.4)) {
-                                    viewModel.requestRetry()
-                                }
+                                viewModel.reportSaveError(error.localizedDescription)
                             }
                         }
                     }
@@ -82,9 +88,9 @@ struct PostConvoFlowView: View {
                             viewModel.backToCandidates()
                         }
                     },
-                    onAnotherTry: {
+                    onAnotherTry: { feedback in
                         withAnimation(.easeInOut(duration: 0.4)) {
-                            viewModel.retryGeneration()
+                            viewModel.retryGeneration(feedback: feedback)
                         }
                     }
                 )

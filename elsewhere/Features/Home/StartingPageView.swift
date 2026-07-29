@@ -13,7 +13,8 @@ struct StartingModeOption: Identifiable {
 struct StartingPageView: View {
     var onSavedToLibrary: (SavedSound) -> Void = { _ in }
 
-    @State private var selectedSession: ConvoSession?
+    @Environment(AuthViewModel.self) private var authViewModel
+    @State private var activeConvoSession: ConvoSession?
 
     private let gridOptions: [StartingModeOption] = [
         StartingModeOption(
@@ -56,38 +57,53 @@ struct StartingPageView: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppTheme.background.ignoresSafeArea()
+        ZStack {
+            AppTheme.background.ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        greetingHeader
-                            .padding(.top, 8)
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    greetingHeader
+                        .padding(.top, 8)
 
-                        headline
-                            .padding(.top, 28)
+                    headline
+                        .padding(.top, 28)
 
-                        suggestedCard
-                            .padding(.top, 28)
+                    suggestedCard
+                        .padding(.top, 28)
 
-                        alternativesSection
-                            .padding(.top, 28)
-                            .padding(.bottom, 32)
-                    }
-                    .padding(.horizontal, 24)
+                    alternativesSection
+                        .padding(.top, 28)
+                        .padding(.bottom, 32)
                 }
+                .padding(.horizontal, 24)
             }
-            .navigationDestination(item: $selectedSession) { session in
+        }
+        .fullScreenCover(item: $activeConvoSession, onDismiss: {
+            activeConvoSession = nil
+        }) { session in
+            NavigationStack {
                 AIConvoView(
                     mode: session.mode,
-                    onSavedToLibrary: onSavedToLibrary,
-                    onCancel: { selectedSession = nil }
+                    onSavedToLibrary: { sound in
+                        onSavedToLibrary(sound)
+                        activeConvoSession = nil
+                    },
+                    onCancel: {
+                        activeConvoSession = nil
+                    }
                 )
                 .id(session.id)
             }
         }
         .preferredColorScheme(.dark)
+    }
+
+    private var firstName: String {
+        authViewModel.displayName.components(separatedBy: " ").first ?? authViewModel.displayName
+    }
+
+    private var profileInitial: String {
+        String(firstName.prefix(1)).uppercased()
     }
 
     private var greetingHeader: some View {
@@ -96,13 +112,13 @@ struct StartingPageView: View {
                 .fill(AppTheme.profileBackground)
                 .frame(width: 36, height: 36)
                 .overlay {
-                    Text("L")
+                    Text(profileInitial)
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(AppTheme.textPrimary)
                 }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Hi Lin")
+                Text("Hi \(firstName)")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(AppTheme.textPrimary)
 
@@ -128,7 +144,7 @@ struct StartingPageView: View {
 
     private var suggestedCard: some View {
         Button {
-            selectedSession = ConvoSession(mode: .sleep)
+            activeConvoSession = ConvoSession(mode: .sleep)
         } label: {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -169,7 +185,7 @@ struct StartingPageView: View {
             LazyVGrid(columns: gridColumns, spacing: 12) {
                 ForEach(gridOptions) { option in
                     ModeOptionCard(option: option) {
-                        selectedSession = ConvoSession(mode: option.mode)
+                        activeConvoSession = ConvoSession(mode: option.mode)
                     }
                 }
             }
@@ -204,4 +220,5 @@ struct ModeOptionCard: View {
 
 #Preview {
     StartingPageView()
+        .environment(AuthViewModel())
 }
