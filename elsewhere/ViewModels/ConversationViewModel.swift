@@ -12,6 +12,7 @@ final class ConversationViewModel {
     private(set) var connectionStatus: String = "Disconnected"
     private(set) var isConnected = false
     private(set) var isConnecting = false
+    private(set) var connectionError: String?
 
     // Conversation
     private(set) var messages: [Message] = []
@@ -35,26 +36,34 @@ final class ConversationViewModel {
 
     func startConversation() async {
         guard !Task.isCancelled else { return }
+        guard !isConnecting else { return }
 
         isConnecting = true
+        connectionError = nil
         connectionStatus = "Connecting..."
 
+        guard await MicrophonePermission.requestIfNeeded() else {
+            isConnecting = false
+            connectionStatus = "Mic blocked"
+            connectionError = "Microphone access is required to talk with your curator. Enable it in Settings → Elsewhere → Microphone."
+            return
+        }
+
         do {
-            let config = ConversationConfig(
-                conversationOverrides: ConversationOverrides(textOnly: false)
-            )
-            conversation = try await ConversationSessionCoordinator.shared.startSession(
-                agentId: agentId,
-                config: config
-            )
+            conversation = try await connectWithFallback()
             guard !Task.isCancelled else {
                 await tearDownConversation(clearMessages: true)
                 return
             }
             setupObservers()
+            await ensureMicrophoneActive()
+        } catch is CancellationError {
+            await tearDownConversation(clearMessages: true)
         } catch {
             connectionStatus = "Failed to connect"
+            connectionError = friendlyError(from: error)
             isConnecting = false
+            isConnected = false
         }
     }
 
@@ -111,6 +120,62 @@ final class ConversationViewModel {
         await endConversation()
     }
 
+    // MARK: - Connection
+
+    /// Prefer a plain voice session so talking always works.
+    /// Then optionally retry once with curator prompt overrides if the dashboard allows them.
+    private func connectWithFallback() async throws -> Conversation {
+        let voiceConfig = ConversationConfig(
+            conversationOverrides: ConversationOverrides(textOnly: false),
+            dynamicVariables: [
+                "curator_mode": mode.rawValue,
+                "curator_mode_label": mode.displayTitle,
+            ]
+        )
+
+        let curatedConfig = ConversationConfig(
+            agentOverrides: AgentOverrides(
+                prompt: CuratorAgentInstructions.systemPrompt(for: mode),
+                firstMessage: CuratorAgentInstructions.firstMessage(for: mode)
+            ),
+            conversationOverrides: ConversationOverrides(textOnly: false),
+            dynamicVariables: [
+                "curator_mode": mode.rawValue,
+                "curator_mode_label": mode.displayTitle,
+            ]
+        )
+
+        // Try curated prompt first; if ElevenLabs rejects overrides, fall back to plain voice.
+        do {
+            return try await ConversationSessionCoordinator.shared.startSession(
+                agentId: agentId,
+                config: curatedConfig
+            )
+        } catch {
+            await ConversationSessionCoordinator.shared.endActiveSession()
+            return try await ConversationSessionCoordinator.shared.startSession(
+                agentId: agentId,
+                config: voiceConfig
+            )
+        }
+    }
+
+    private func ensureMicrophoneActive() async {
+        guard let conversation, isMuted else { return }
+        try? await conversation.toggleMute()
+    }
+
+    private func friendlyError(from error: Error) -> String {
+        let text = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        if text.localizedCaseInsensitiveContains("override") {
+            return "Curator prompt overrides aren’t enabled for this agent yet. Tap the mic to retry."
+        }
+        if text.localizedCaseInsensitiveContains("network") || text.localizedCaseInsensitiveContains("offline") {
+            return "Network issue connecting to your curator. Check Wi‑Fi and try again."
+        }
+        return text.isEmpty ? "Couldn’t connect to your curator. Tap the mic to try again." : text
+    }
+
     // MARK: - Combine observers
 
     private func setupObservers() {
@@ -140,6 +205,7 @@ final class ConversationViewModel {
                         self.connectionStatus = "Connected"
                         self.isConnected = true
                         self.isConnecting = false
+                        self.connectionError = nil
                     case .ended:
                         self.connectionStatus = "Ended"
                         self.isConnected = false
@@ -148,6 +214,7 @@ final class ConversationViewModel {
                         self.connectionStatus = "Error"
                         self.isConnected = false
                         self.isConnecting = false
+                        self.connectionError = "The curator session hit an error. Tap the mic to try again."
                     }
                 }
             }

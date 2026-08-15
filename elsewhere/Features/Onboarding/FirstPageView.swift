@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FirstPageView: View {
-    var onFindYours: () -> Void = {}
+    @Environment(AuthViewModel.self) private var authViewModel
 
     var body: some View {
         ZStack {
@@ -16,15 +16,20 @@ struct FirstPageView: View {
 
                 Spacer()
 
+                valueLine
+                    .padding(.bottom, 20)
+
                 swipeHint
 
                 findYoursButton
                     .padding(.top, 28)
+
+                reassuranceText
+                    .padding(.top, 16)
                     .padding(.bottom, 16)
             }
             .padding(.horizontal, 24)
         }
-        .preferredColorScheme(.dark)
     }
 
     private var header: some View {
@@ -50,7 +55,7 @@ struct FirstPageView: View {
                         .overlay {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 14))
-                                .foregroundStyle(AppTheme.textPrimary)
+                                .foregroundStyle(AppTheme.onAccent)
                                 .offset(x: 1)
                         }
                 }
@@ -87,6 +92,13 @@ struct FirstPageView: View {
         .frame(height: 8)
     }
 
+    private var valueLine: some View {
+        Text("A sound from your life, for the moments you need it.")
+            .font(AppTheme.serifItalic(18))
+            .foregroundStyle(AppTheme.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
     private var swipeHint: some View {
         Text("→ swipe for Jordan, Sam, Lin")
             .font(.system(size: 14))
@@ -95,24 +107,47 @@ struct FirstPageView: View {
     }
 
     private var findYoursButton: some View {
-        Button(action: onFindYours) {
+        Button {
+            Task { await authViewModel.signInWithApple() }
+        } label: {
             HStack(spacing: 6) {
-                Image(systemName: "apple.logo")
-                    .font(.system(size: 16, weight: .medium))
+                if authViewModel.isLoading {
+                    ProgressView()
+                        .tint(AppTheme.ctaForeground)
+                } else {
+                    Image(systemName: "apple.logo")
+                        .font(.system(size: 16, weight: .medium))
 
-                Text("find yours")
-                    .font(.system(size: 17, weight: .medium))
+                    Text("find yours")
+                        .font(.system(size: 17, weight: .medium))
+                }
             }
-            .foregroundStyle(Color.black.opacity(0.85))
+            .foregroundStyle(AppTheme.ctaForeground)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 18)
             .background(AppTheme.creamButton)
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .disabled(authViewModel.isLoading)
+    }
+
+    private var reassuranceText: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let error = authViewModel.errorMessage {
+                Text(error)
+                    .font(.system(size: 12))
+                    .foregroundStyle(AppTheme.accentPurple)
+            }
+
+            Text("Private and saved only to your account.")
+                .font(.system(size: 12))
+                .foregroundStyle(AppTheme.textMuted)
+        }
     }
 }
 
 #Preview {
     FirstPageView()
+        .environment(AuthViewModel())
 }

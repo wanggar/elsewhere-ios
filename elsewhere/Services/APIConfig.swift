@@ -21,6 +21,10 @@ enum APIConfig {
         baseURL.appendingPathComponent("api/library")
     }
 
+    static var soundInsightURL: URL {
+        baseURL.appendingPathComponent("api/sound-insight")
+    }
+
     static func libraryItemURL(id: String) -> URL {
         baseURL.appendingPathComponent("api/library/\(id)")
     }

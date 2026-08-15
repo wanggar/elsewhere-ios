@@ -49,6 +49,7 @@ final class LibraryViewModel {
             do {
                 let url = APIConfig.libraryItemURL(id: sound.id.uuidString)
                 _ = try await APIClient.request(url: url, method: "DELETE")
+                ConversationMemoryStore.delete(for: sound.id)
                 library.delete(sound)
             } catch {
                 fetchError = "Couldn't delete — try again."

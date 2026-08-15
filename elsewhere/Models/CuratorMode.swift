@@ -56,7 +56,7 @@ enum CuratorMode: String, Identifiable, Hashable, CaseIterable {
         case .focus: AppTheme.focusText
         case .relax: AppTheme.relaxText
         case .uplift: AppTheme.upliftText
-        case .move: AppTheme.textPrimary
+        case .move: AppTheme.moveCardText
         }
     }
 
@@ -66,7 +66,7 @@ enum CuratorMode: String, Identifiable, Hashable, CaseIterable {
         case .focus: AppTheme.focusText.opacity(0.75)
         case .relax: AppTheme.relaxText.opacity(0.75)
         case .uplift: AppTheme.upliftText.opacity(0.75)
-        case .move: AppTheme.textSecondary
+        case .move: AppTheme.moveCardSecondaryText
         }
     }
 

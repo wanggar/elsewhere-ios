@@ -191,12 +191,16 @@ final class SoundCreationViewModel {
         let response = try JSONDecoder().decode(SaveResponse.self, from: data)
         let dto = response.sound
 
+        let soundID = UUID(uuidString: dto.id) ?? UUID()
+        ConversationMemoryStore.save(messages: transcriptMessages, for: soundID)
+
         return SavedSound(
-            id: UUID(uuidString: dto.id) ?? UUID(),
+            id: soundID,
             title: dto.title,
             subtitle: dto.subtitle,
             mode: CuratorMode(rawValue: dto.mode) ?? mode,
-            audioURL: URL(string: dto.audioUrl)
+            audioURL: URL(string: dto.audioUrl),
+            generationPrompt: selectedCandidate.generationPrompt
         )
     }
 }

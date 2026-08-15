@@ -3,7 +3,6 @@ import SwiftUI
 private enum AppRoute {
     case loading
     case intro
-    case signIn
     case home
     case library
 }
@@ -12,7 +11,6 @@ struct ContentView: View {
     @Environment(AuthViewModel.self) private var authViewModel
     @State private var route: AppRoute = .loading
     @State private var libraryViewModel = LibraryViewModel()
-    @State private var hasSeenIntro = false
 
     var body: some View {
         Group {
@@ -22,14 +20,7 @@ struct ContentView: View {
                     .transition(.opacity)
 
             case .intro:
-                FirstPageView {
-                    hasSeenIntro = true
-                    route = .signIn
-                }
-                .transition(.opacity)
-
-            case .signIn:
-                SignInView()
+                FirstPageView()
                     .transition(.opacity)
                     .onChange(of: authViewModel.state) { _, newState in
                         if case .signedIn = newState {
@@ -53,7 +44,7 @@ struct ContentView: View {
         .onChange(of: authViewModel.state) { _, newState in
             if case .signedOut = newState {
                 libraryViewModel = LibraryViewModel()
-                route = hasSeenIntro ? .signIn : .intro
+                route = .intro
             }
         }
         .task {
@@ -68,16 +59,12 @@ struct ContentView: View {
         authViewModel.checkExistingSession()
 
         if case .signedIn = authViewModel.state {
-            // Returning signed-in user — go straight to library.
-            // LibraryView fetches content on appear; no need to block routing on a network call.
             route = .library
         } else {
             route = .intro
         }
     }
 
-    /// Called only after a fresh Apple sign-in — checks whether the library
-    /// already has sounds and routes accordingly.
     private func routeAfterSignIn() async {
         await libraryViewModel.fetchLibrary()
         route = libraryViewModel.library.sounds.isEmpty ? .home : .library
@@ -87,4 +74,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environment(AuthViewModel())
+        .environment(AppearanceManager())
 }

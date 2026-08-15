@@ -43,7 +43,7 @@ struct PostConvoIntroView: View {
                 Button(action: onBegin) {
                     Text("begin")
                         .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(Color.black.opacity(0.85))
+                        .foregroundStyle(AppTheme.ctaForeground)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 18)
                         .background(AppTheme.creamButton)
@@ -54,7 +54,6 @@ struct PostConvoIntroView: View {
                 .padding(.bottom, 32)
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private var introHeadline: String {

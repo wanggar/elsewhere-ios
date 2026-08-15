@@ -6,7 +6,7 @@ struct LibraryView: View {
     @Environment(AuthViewModel.self) private var authViewModel
     @State private var selectedSound: SavedSound?
     @State private var activeConvoSession: ConvoSession?
-    @State private var showSignOutConfirmation = false
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -51,7 +51,9 @@ struct LibraryView: View {
                 .id(session.id)
             }
         }
-        .preferredColorScheme(.dark)
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
         .task {
             await viewModel.fetchLibrary()
         }
@@ -73,7 +75,7 @@ struct LibraryView: View {
 
             Spacer()
 
-            Button { showSignOutConfirmation = true } label: {
+            Button { showSettings = true } label: {
                 Circle()
                     .fill(AppTheme.profileBackground)
                     .frame(width: 36, height: 36)
@@ -84,10 +86,7 @@ struct LibraryView: View {
                     }
             }
             .buttonStyle(.plain)
-            .confirmationDialog("", isPresented: $showSignOutConfirmation) {
-                Button("Sign Out", role: .destructive) { authViewModel.signOut() }
-                Button("Cancel", role: .cancel) {}
-            }
+            .accessibilityLabel("Settings")
         }
     }
 
@@ -305,4 +304,6 @@ private struct LibraryModeCard: View {
         ],
         activeMode: .sleep
     )))
+    .environment(AuthViewModel())
+    .environment(AppearanceManager())
 }

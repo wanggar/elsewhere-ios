@@ -34,11 +34,11 @@ struct AIConvoView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .preferredColorScheme(.dark)
         .task {
             await viewModel.startConversation()
         }
         .onDisappear {
+            guard !viewModel.showPostConvoFlow else { return }
             Task { await viewModel.endConversation() }
         }
         .fullScreenCover(isPresented: Binding(
@@ -130,20 +130,48 @@ struct AIConvoView: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(viewModel.isConnecting ? "Starting your session..." : "Your curator is ready.")
+            Text(emptyStateTitle)
                 .font(AppTheme.serifTitle(28))
                 .foregroundStyle(AppTheme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text(
-                viewModel.isConnecting
-                    ? "Connecting to your \(viewModel.mode.displayTitle) curator."
-                    : "Tap the mic below to begin."
-            )
-            .font(.system(size: 15))
-            .foregroundStyle(AppTheme.textSecondary)
+            Text(emptyStateSubtitle)
+                .font(.system(size: 15))
+                .foregroundStyle(AppTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let error = viewModel.connectionError {
+                Text(error)
+                    .font(.system(size: 14))
+                    .foregroundStyle(AppTheme.pulsePurple)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+
+                Button("Try again") {
+                    viewModel.handleMicTap()
+                }
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(AppTheme.pulsePurple)
+                .padding(.top, 8)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var emptyStateTitle: String {
+        if viewModel.isConnecting { return "Starting your session..." }
+        if viewModel.connectionError != nil { return "Couldn't start the curator." }
+        return "Your curator is ready."
+    }
+
+    private var emptyStateSubtitle: String {
+        if viewModel.isConnecting {
+            return "Connecting to your \(viewModel.mode.displayTitle) curator."
+        }
+        if viewModel.connectionError != nil {
+            return "Fix the issue below, then tap try again or the mic."
+        }
+        return "Tap the mic and talk like you would with a friend. When you're ready, tap Compose to hear sample sounds."
     }
 
     @ViewBuilder

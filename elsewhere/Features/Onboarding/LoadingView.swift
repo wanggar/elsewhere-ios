@@ -8,7 +8,7 @@ struct LoadingView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                LoadingPulseIcon()
+                LoadingPulseIcon(logoSize: 140)
                     .padding(.bottom, 36)
 
                 Text("A sound from your life, for\nthe moments you need it.")
@@ -24,7 +24,6 @@ struct LoadingView: View {
                     .padding(.bottom, 48)
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private var pageIndicator: some View {

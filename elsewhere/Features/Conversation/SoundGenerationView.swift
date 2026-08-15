@@ -39,7 +39,6 @@ struct SoundGenerationView: View {
                     .padding(.bottom, 48)
             }
         }
-        .preferredColorScheme(.dark)
         .task(id: checklist.items.map(\.text).joined()) {
             revealedCount = 0
             while !Task.isCancelled {

@@ -54,7 +54,6 @@ struct SoundCandidatesView: View {
             }
             .padding(.horizontal, 24)
         }
-        .preferredColorScheme(.dark)
         .onAppear {
             if candidates.indices.contains(selectedIndex) {
                 onSelect(candidates[selectedIndex])
@@ -98,7 +97,7 @@ struct SoundCandidatesView: View {
             } label: {
                 Text("save this one")
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(Color.black.opacity(0.85))
+                    .foregroundStyle(AppTheme.ctaForeground)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
                     .background(AppTheme.creamButton)
@@ -134,7 +133,7 @@ struct SoundCandidateCard: View {
                         .overlay {
                             Image(systemName: "speaker.wave.2.fill")
                                 .font(.system(size: 12))
-                                .foregroundStyle(Color.white.opacity(0.9))
+                                .foregroundStyle(AppTheme.onAccent)
                         }
                 } else {
                     Circle()

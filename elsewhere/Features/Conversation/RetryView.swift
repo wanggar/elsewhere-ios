@@ -71,7 +71,6 @@ struct RetryView: View {
                     .padding(.bottom, 24)
             }
         }
-        .preferredColorScheme(.light)
     }
 
     private var backButton: some View {

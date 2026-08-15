@@ -15,6 +15,7 @@ struct StartingPageView: View {
 
     @Environment(AuthViewModel.self) private var authViewModel
     @State private var activeConvoSession: ConvoSession?
+    @State private var showSettings = false
 
     private let gridOptions: [StartingModeOption] = [
         StartingModeOption(
@@ -46,8 +47,8 @@ struct StartingPageView: View {
             title: "to move",
             subtitle: "walking",
             background: AppTheme.moveCardBackground,
-            titleColor: AppTheme.textPrimary,
-            subtitleColor: AppTheme.textSecondary
+            titleColor: AppTheme.moveCardText,
+            subtitleColor: AppTheme.moveCardSecondaryText
         ),
     ]
 
@@ -95,7 +96,9 @@ struct StartingPageView: View {
                 .id(session.id)
             }
         }
-        .preferredColorScheme(.dark)
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
     }
 
     private var firstName: String {
@@ -108,14 +111,18 @@ struct StartingPageView: View {
 
     private var greetingHeader: some View {
         HStack(alignment: .center, spacing: 12) {
-            Circle()
-                .fill(AppTheme.profileBackground)
-                .frame(width: 36, height: 36)
-                .overlay {
-                    Text(profileInitial)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(AppTheme.textPrimary)
-                }
+            Button { showSettings = true } label: {
+                Circle()
+                    .fill(AppTheme.profileBackground)
+                    .frame(width: 36, height: 36)
+                    .overlay {
+                        Text(profileInitial)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(AppTheme.textPrimary)
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Settings")
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Hi \(firstName)")
@@ -221,4 +228,5 @@ struct ModeOptionCard: View {
 #Preview {
     StartingPageView()
         .environment(AuthViewModel())
+        .environment(AppearanceManager())
 }

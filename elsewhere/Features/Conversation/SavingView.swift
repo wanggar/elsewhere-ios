@@ -73,7 +73,6 @@ struct SavingView: View {
                 .padding(.bottom, 24)
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private var backButton: some View {
@@ -177,11 +176,11 @@ struct SavingView: View {
             Group {
                 if isSaving {
                     ProgressView()
-                        .tint(Color.black.opacity(0.6))
+                        .tint(AppTheme.ctaForeground)
                 } else {
                     Text("save to your space")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Color.black.opacity(0.85))
+                        .foregroundStyle(AppTheme.ctaForeground)
                 }
             }
             .frame(maxWidth: .infinity)
