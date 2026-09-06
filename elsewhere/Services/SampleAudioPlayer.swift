@@ -1,13 +1,12 @@
 import AVFoundation
+import Combine
 import Foundation
-import Observation
 
 /// Plays the pre-sign-in sample sounds. All samples are bundled, preloaded, and looped;
 /// switching between samples crossfades instead of cutting.
 @MainActor
-@Observable
-final class SampleAudioPlayer {
-    private(set) var playingID: UUID?
+final class SampleAudioPlayer: ObservableObject {
+    @Published private(set) var playingID: UUID?
 
     private var players: [UUID: AVQueuePlayer] = [:]
     private var loopers: [UUID: AVPlayerLooper] = [:]

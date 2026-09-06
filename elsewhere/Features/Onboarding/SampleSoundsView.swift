@@ -20,7 +20,7 @@ struct SampleSoundsView: View {
     @Environment(AuthViewModel.self) private var authViewModel
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var player = SampleAudioPlayer()
+    @StateObject private var player = SampleAudioPlayer()
     @State private var selection = 0
     @State private var settleTask: Task<Void, Never>?
     @State private var userPaused = false
@@ -162,6 +162,20 @@ struct SampleSoundsView: View {
             Spacer(minLength: 0)
 
             signInButton
+
+            Button {
+                Task { await authViewModel.signInAsDemo() }
+            } label: {
+                Text("just looking? explore the demo")
+                    .font(AppTheme.serifItalic(15))
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(authViewModel.isLoading)
+            .padding(.top, 8)
 
             if let error = authViewModel.errorMessage {
                 Text(error)
