@@ -20,7 +20,7 @@ struct ContentView: View {
                     .transition(.opacity)
 
             case .intro:
-                FirstPageView()
+                SampleSoundsView()
                     .transition(.opacity)
                     .onChange(of: authViewModel.state) { _, newState in
                         if case .signedIn = newState {

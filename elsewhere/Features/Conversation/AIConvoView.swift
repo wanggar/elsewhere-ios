@@ -1,5 +1,6 @@
 import SwiftUI
 import ElevenLabs
+import LiveKit
 
 struct AIConvoView: View {
     var onSavedToLibrary: ((SavedSound) -> Void)? = nil

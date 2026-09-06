@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4EE329762FFB3910009F2212 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 4EE329752FFB3910009F2212 /* ElevenLabs */; };
+		4E8E14163034637C0069416C /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 4E8E14153034637C0069416C /* ElevenLabs */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,7 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4EE329762FFB3910009F2212 /* ElevenLabs in Frameworks */,
+				4E8E14163034637C0069416C /* ElevenLabs in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,7 +130,7 @@
 			);
 			name = elsewhere;
 			packageProductDependencies = (
-				4EE329752FFB3910009F2212 /* ElevenLabs */,
+				4E8E14153034637C0069416C /* ElevenLabs */,
 			);
 			productName = elsewhere;
 			productReference = 8AFE99142FD4FFA70020B85F /* elsewhere.app */;
@@ -215,7 +215,7 @@
 			mainGroup = 8AFE990B2FD4FFA70020B85F;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				4EE329742FFB3910009F2212 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */,
+				4E8E14143034637C0069416C /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8AFE99152FD4FFA70020B85F /* Products */;
@@ -414,7 +414,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = elsewhere/elsewhere.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.0.3;
 				DEVELOPMENT_TEAM = 7923CC7WFX;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -422,7 +422,9 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = elsewhere/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Elsewhere uses your microphone to have a voice conversation with your sound curator.";
+				INFOPLIST_KEY_CFBundleDisplayName = Elsewhere;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is used to allow you to capture or upload visual content.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Elsewhere uses your microphone to have a voice conversation with your curator.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -461,7 +463,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = elsewhere/elsewhere.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.0.3;
 				DEVELOPMENT_TEAM = 7923CC7WFX;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -469,7 +471,9 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = elsewhere/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Elsewhere uses your microphone to have a voice conversation with your sound curator.";
+				INFOPLIST_KEY_CFBundleDisplayName = Elsewhere;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is used to allow you to capture or upload visual content.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Elsewhere uses your microphone to have a voice conversation with your curator.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -645,20 +649,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		4EE329742FFB3910009F2212 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */ = {
+		4E8E14143034637C0069416C /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/elevenlabs/elevenlabs-swift-sdk.git";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4EE329752FFB3910009F2212 /* ElevenLabs */ = {
+		4E8E14153034637C0069416C /* ElevenLabs */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 4EE329742FFB3910009F2212 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */;
+			package = 4E8E14143034637C0069416C /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */;
 			productName = ElevenLabs;
 		};
 /* End XCSwiftPackageProductDependency section */
