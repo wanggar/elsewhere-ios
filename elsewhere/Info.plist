@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>ELSEWHERE_API_BASE_URL</key>
-	<string>https://elsewhere-backend.vercel.app</string>
+	<string>https://elsewhere.codeswitch.us</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Elsewhere uses your microphone to have a voice conversation with your curator.</string>
 	<key>NSAppTransportSecurity</key>
