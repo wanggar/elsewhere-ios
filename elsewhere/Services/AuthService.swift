@@ -28,6 +28,12 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate,
         }
     }
 
+    // MARK: - Demo sign in (App Review / try-before-sign-up)
+
+    func signInAsDemo() async throws -> AuthUser {
+        try await APIConfig.performDemoSignIn()
+    }
+
     // MARK: - Session helpers
 
     /// Returns a valid access token, refreshing if needed.
@@ -50,6 +56,12 @@ final class AuthService: NSObject, ASAuthorizationControllerDelegate,
     }
 
     func signOut() {
+        KeychainService.clearAll()
+    }
+
+    /// Permanently deletes the account server-side, then clears local credentials.
+    func deleteAccount() async throws {
+        _ = try await APIClient.request(url: APIConfig.accountURL, method: "DELETE")
         KeychainService.clearAll()
     }
 

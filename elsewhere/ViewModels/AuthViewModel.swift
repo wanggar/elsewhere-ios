@@ -44,9 +44,36 @@ final class AuthViewModel {
         isLoading = false
     }
 
+    func signInAsDemo() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            let user = try await AuthService.shared.signInAsDemo()
+            state = .signedIn(user)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+
     func signOut() {
         AuthService.shared.signOut()
         state = .signedOut
+    }
+
+    func deleteAccount() async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        do {
+            try await AuthService.shared.deleteAccount()
+            state = .signedOut
+            isLoading = false
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+            return false
+        }
     }
 
     var currentUser: AuthUser? {

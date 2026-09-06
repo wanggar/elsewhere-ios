@@ -1,14 +1,14 @@
 import Foundation
 
 enum APIConfig {
-    /// Production Vercel backend. Override via Info.plist `ELSEWHERE_API_BASE_URL` for local dev.
+    /// Production backend. Override via Info.plist `ELSEWHERE_API_BASE_URL` for local dev.
     static var baseURL: URL {
         if let override = Bundle.main.object(forInfoDictionaryKey: "ELSEWHERE_API_BASE_URL") as? String,
            let url = URL(string: override.trimmingCharacters(in: CharacterSet(charactersIn: "/"))),
            !override.isEmpty {
             return url
         }
-        return URL(string: "https://elsewhere-backend.vercel.app")!
+        return URL(string: "https://elsewhere.codeswitch.us")!
     }
 
     // MARK: - Endpoint URLs
@@ -33,8 +33,16 @@ enum APIConfig {
         baseURL.appendingPathComponent("api/auth/apple")
     }
 
+    static var demoSignInURL: URL {
+        baseURL.appendingPathComponent("api/auth/demo")
+    }
+
     static var refreshTokenURL: URL {
         baseURL.appendingPathComponent("api/auth/refresh")
+    }
+
+    static var accountURL: URL {
+        baseURL.appendingPathComponent("api/account")
     }
 
     // MARK: - Auth helpers (used by AuthService before APIClient exists)
@@ -79,6 +87,30 @@ enum APIConfig {
                 throw AuthError.serverError(errorMsg)
             }
             throw AuthError.serverError("Sign-in request failed")
+        }
+
+        let decoded = try JSONDecoder().decode(AuthResponse.self, from: data)
+        KeychainService.set(decoded.accessToken,  for: .accessToken)
+        KeychainService.set(decoded.refreshToken, for: .refreshToken)
+        KeychainService.set(decoded.user.id,      for: .userId)
+        if let name = decoded.user.displayName {
+            KeychainService.set(name, for: .displayName)
+        }
+
+        return AuthUser(id: decoded.user.id, displayName: decoded.user.displayName)
+    }
+
+    static func performDemoSignIn() async throws -> AuthUser {
+        var request = URLRequest(url: demoSignInURL)
+        request.httpMethod = "POST"
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+               let errorMsg = json["error"] {
+                throw AuthError.serverError(errorMsg)
+            }
+            throw AuthError.serverError("Demo sign-in request failed")
         }
 
         let decoded = try JSONDecoder().decode(AuthResponse.self, from: data)

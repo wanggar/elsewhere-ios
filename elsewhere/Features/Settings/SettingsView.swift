@@ -4,6 +4,8 @@ struct SettingsView: View {
     @Environment(AppearanceManager.self) private var appearanceManager
     @Environment(AuthViewModel.self) private var authViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showDeleteConfirmation = false
+    @State private var isDeleting = false
 
     var body: some View {
         NavigationStack {
@@ -63,7 +65,7 @@ struct SettingsView: View {
             } label: {
                 Text("Sign out")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Color.red.opacity(0.9))
+                    .foregroundStyle(AppTheme.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 16)
@@ -71,6 +73,50 @@ struct SettingsView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
+
+            Button {
+                showDeleteConfirmation = true
+            } label: {
+                HStack {
+                    Text(isDeleting ? "Deleting…" : "Delete account")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Color.red.opacity(0.9))
+                    Spacer()
+                    if isDeleting {
+                        ProgressView()
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 16)
+                .background(AppTheme.cardSurface)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(isDeleting)
+            .confirmationDialog(
+                "Delete your account?",
+                isPresented: $showDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete account", role: .destructive) {
+                    isDeleting = true
+                    Task {
+                        let deleted = await authViewModel.deleteAccount()
+                        isDeleting = false
+                        if deleted { dismiss() }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This permanently deletes your account and every saved sound. This cannot be undone.")
+            }
+
+            if let error = authViewModel.errorMessage {
+                Text(error)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.red.opacity(0.8))
+            }
         }
     }
 }

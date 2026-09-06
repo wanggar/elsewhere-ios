@@ -27,7 +27,7 @@ struct SignInView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("elsewhere")
+            Text("Elsewhere")
                 .font(AppTheme.serifTitle(38))
                 .foregroundStyle(AppTheme.textPrimary)
 
@@ -60,6 +60,18 @@ struct SignInView: View {
             .onTapGesture {
                 Task { await authViewModel.signInWithApple() }
             }
+
+            Button {
+                Task { await authViewModel.signInAsDemo() }
+            } label: {
+                Text("Just looking? Explore the demo")
+                    .font(AppTheme.serifItalic(15))
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+            }
+            .disabled(authViewModel.isLoading)
 
             Text("Your sounds are private and only stored on your account.")
                 .font(.system(size: 12))
